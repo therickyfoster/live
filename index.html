@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Planetary Restoration Archive · Foster + Navi -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🌌 Galactic RTMPS Portal — Peace Grid</title>
+  <meta name="description" content="Futuristic constellation-themed, hash-confirmed, anti-inversion, tamper-evident RTMPS/HLS streaming portal with PWA, offline cache, and GitHub UX sugar — single-file edition."/>
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta property="og:title" content="Galactic RTMPS Portal — Peace Grid" />
+  <meta property="og:description" content="Constellation UI + hash-confirmed integrity + OBS-friendly HLS playback. Zero-Harm / Anti‑Inversion." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%230b1020' width='100%' height='100%'/><text x='50%' y='55%' font-size='64' fill='%23a0d8ff' font-family='monospace' text-anchor='middle'>Galactic RTMPS Portal</text></svg>" />
+
+  <!-- Minimal reset + layout -->
+  <style>
+    :root{
+      --bg:#0b1020;--panel:#0f1733;--muted:#93a4c3;--fg:#e7f1ff;--accent:#7dc3ff;--ok:#30d158;--warn:#ffd60a;--bad:#ff453a;
+      --glass: rgba(255,255,255,0.06); --glass2: rgba(255,255,255,0.12);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:var(--bg);color:var(--fg);overflow:hidden}
+    a{color:var(--accent);text-decoration:none}
+    .app{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:100%}
+    header,footer{backdrop-filter: blur(6px);background:linear-gradient(180deg,rgba(12,18,40,.85),rgba(12,18,40,.55));border-bottom:1px solid rgba(255,255,255,.06);}
+    header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem}
+    header .title{font-weight:700;letter-spacing:.3px}
+    header .badges{margin-left:auto;display:flex;gap:.5rem;align-items:center}
+    .badge{font-size:.78rem;color:var(--muted);padding:.25rem .55rem;border:1px solid rgba(255,255,255,.12);border-radius:999px;display:inline-flex;align-items:center;gap:.4rem;background:var(--glass)}
+    .pill{padding:.3rem .6rem;border:1px solid rgba(255,255,255,.2);border-radius:999px}
+    main{position:relative;display:grid;grid-template-columns:380px 1fr;gap:1rem;padding:1rem;overflow:hidden}
+    .panel{background:linear-gradient(180deg,rgba(20,30,60,.7),rgba(10,14,32,.6));border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35);backdrop-filter: blur(8px);padding:1rem;overflow:auto;}
+    .panel h2{margin:.2rem 0 .6rem 0;font-size:1.05rem;color:#cfe7ff;letter-spacing:.3px}
+    .row{display:flex;gap:.6rem;align-items:center}
+    .grid{display:grid;gap:.6rem}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    label{font-size:.82rem;color:var(--muted)}
+    input,select,button,textarea{width:100%;padding:.6rem .7rem;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0e1631;color:var(--fg)}
+    button{cursor:pointer;background:linear-gradient(180deg,#193767,#0e1a36);border-color:#345b92}
+    button:hover{filter:brightness(1.1)}
+    .ghost{background:transparent;border-color:rgba(255,255,255,.12)}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+    .video-wrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35)}
+    video{width:100%;height:100%;display:block;background:black}
+    .overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+    .overlay .top{display:flex;gap:.5rem;padding:.6rem}
+    .overlay .bottom{display:flex;justify-content:space-between;gap:.5rem;padding:.6rem}
+    .chip{pointer-events:auto}
+    .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:.35rem;background:#999;box-shadow:0 0 0 0 rgba(48,209,88,.0);animation:pulse 3s infinite}
+    .dot-ok{background:var(--ok);box-shadow:0 0 0 6px rgba(48,209,88,.18)}
+    .dot-bad{background:var(--bad);box-shadow:0 0 0 6px rgba(255,69,58,.18)}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(48,209,88,.25)}70%{box-shadow:0 0 0 16px rgba(48,209,88,0)}100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}}
+    .marquee{white-space:nowrap;overflow:hidden}
+    .marquee span{display:inline-block;padding-left:100%;animation:scroll 30s linear infinite}
+    @keyframes scroll{to{transform:translateX(-100%)}}
+    .toast{position:fixed;right:1rem;bottom:1rem;background:var(--panel);border:1px solid rgba(255,255,255,.15);padding:.7rem 1rem;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+    .gh-corner{position:absolute;top:0;right:0;transform:scale(1.1)}
+    canvas#stars{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 70% -10%,rgba(30,60,150,.35),transparent),radial-gradient(800px 400px at 5% 120%,rgba(0,200,255,.15),transparent),radial-gradient(600px 400px at 95% 60%,rgba(140,0,255,.12),transparent),#050814}
+    details{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.6rem;background:rgba(255,255,255,.04)}
+    summary{cursor:pointer;color:#cfe7ff}
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+  <div class="app">
+    <header>
+      <div class="title">🛰️ <span style="font-weight:700">Galactic RTMPS Portal</span> · <span class="pill">Zero‑Harm · Anti‑Inversion</span></div>
+      <div class="badges">
+        <div class="badge" id="integrityBadge">⚙️ Hash: <code id="docHash">…</code></div>
+        <button class="badge ghost" id="installBtn" title="Install as App (PWA)">⬇️ Install</button>
+        <a class="badge" target="_blank" rel="noopener" href="https://github.com/TheRickyFoster" title="GitHub Profile">🐙 GitHub</a>
+      </div>
+      <!-- GitHub Corner -->
+      <a href="https://github.com/TheRickyFoster" class="gh-corner" aria-label="View source on GitHub">
+        <svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true">
+          <path d="M0 0l115 115h15l12 27 108 108V0z" fill="#151513"></path>
+          <path d="M128 109c-15-9-9-19-9-19 3-7 2-11 2-11-1-7 3-3 3-3 4 4 2 11 2 11-3 10 5 15 9 16" fill="#fff" style="transform-origin:130px 106px" class="octo-arm"></path>
+          <path d="M115 115s3-1 5-2c-14-4-19-15-19-15s-5-9-12-11c-9-3-1-5-1-5 10 1 15 10 15 10 9 15 24 10 30 8" fill="#fff" class="octo-body"></path>
+        </svg>
+      </a>
+    </header>
+
+    <main>
+      <!-- Control Panel -->
+      <section class="panel" id="left">
+        <h2>🔧 Stream Setup (OBS → RTMP(S) → HLS)</h2>
+        <div class="grid">
+          <label>HLS / M3U8 URL (player input)
+            <input id="hlsUrl" placeholder="https://your-domain/live/STREAM_KEY/index.m3u8" />
+          </label>
+          <div class="grid cols-2">
+            <label>RTMP(S) Server
+              <input id="rtmpServer" placeholder="rtmps://your-domain/live" />
+            </label>
+            <label>Stream Key
+              <input id="streamKey" placeholder="galaxy001" />
+            </label>
+          </div>
+          <div class="row">
+            <button id="apply">▶️ Load Stream</button>
+            <button class="ghost" id="copyObs">📋 Copy OBS URL</button>
+            <button class="ghost" id="qrBtn">🧾 Show QR</button>
+          </div>
+        </div>
+        <hr style="border-color:rgba(255,255,255,.1)"/>
+        <h2>🛡️ Tamper‑Evident Integrity</h2>
+        <div class="grid">
+          <div class="row"><span class="status-dot" id="hashDot"></span><span id="hashStatus">Computing document hash…</span></div>
+          <div class="row">
+            <button id="copyHash">Copy Current Hash</button>
+            <button class="ghost" id="rememberHash">Remember This Hash</button>
+            <button class="ghost" id="compareHash">Compare to Remembered</button>
+          </div>
+          <small class="muted">This page self‑hashes (<code>SHA‑256</code>) its HTML at runtime to detect changes. Store the expected hash in a signed note (Git, IPFS, OTS). Any mismatch flips the indicator red.
+          </small>
+        </div>
+        <hr style="border-color:rgba(255,255,255,.1)"/>
+        <h2>📢 Anti‑Inversion Covenant</h2>
+        <p class="muted">This tool is for peace‑building, humanitarian coordination, and education. No weaponization, coercion, or harm. Violations void consent. 🕊️</p>
+        <details>
+          <summary>Quick OBS + NGINX RTMP → HLS recipe</summary>
+          <pre style="white-space:pre-wrap"><code># 1) Server (Ubuntu example):
+sudo apt update && sudo apt install -y nginx libnginx-mod-rtmp
+# /etc/nginx/nginx.conf — add inside 'http { }':
+rtmp {
+  server { listen 1935; chunk_size 4096;
+    application live { live on; record off; 
+      allow publish all; allow play all;  # tighten for prod
+      hls on; hls_path /var/www/html/hls; hls_fragment 2s; hls_playlist_length 6s;
+      hls_variant _720p BANDWIDTH=2800000; # tweak as needed
+    }
+  }
+}
+# Then: sudo nginx -t && sudo systemctl reload nginx
+
+# 2) OBS (Settings → Stream):
+# Server: rtmps://YOUR_DOMAIN/live
+# Stream key: galaxy001 (or any)
+
+# 3) Player URL for this page:
+# https://YOUR_DOMAIN/hls/galaxy001/index.m3u8</code></pre>
+        </details>
+      </section>
+
+      <!-- Player Panel -->
+      <section class="panel" id="right" style="display:grid;grid-template-rows:auto 1fr auto;gap:.8rem;">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h2>📡 Live Player</h2>
+          <div class="row">
+            <button class="ghost" id="themeBtn">🌓 Theme</button>
+            <button class="ghost" id="pipBtn">🪟 PiP</button>
+            <button class="ghost" id="fsBtn">⛶ Fullscreen</button>
+          </div>
+        </div>
+        <div class="video-wrap">
+          <video id="video" controls playsinline></video>
+          <div class="overlay">
+            <div class="top">
+              <div class="badge chip"><span id="liveDot" class="status-dot"></span><b id="liveStatus">Idle</b></div>
+              <div class="badge chip">Latency: <span id="latency">—</span></div>
+              <div class="badge chip">Viewer Hash: <code id="viewerHash">—</code></div>
+            </div>
+            <div class="bottom">
+              <div class="badge chip marquee"><span id="ticker">Peace Grid · Stewardship · Sovereignty · Unity · Zero‑Harm · Planetary Restoration Archive</span></div>
+              <button class="badge ghost chip" id="shareBtn">🔗 Share</button>
+            </div>
+          </div>
+        </div>
+        <details>
+          <summary>ℹ️ What this file guarantees & what it cannot</summary>
+          <p>
+            This is a <b>single‑file</b> portal. Browsers cannot ingest RTMP/RTMPS directly; a small server must translate to <b>HLS/DASH</b> or <b>WebRTC (WHIP)</b>. This page provides a hardened player, self‑hashing integrity, and a PWA shell. Pair it with the tiny NGINX‑RTMP config above (or a managed HLS host) to go live in minutes.
+          </p>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      <div class="marquee"><span>🧭 Continuity: Peace Ripple · Lightforge · Sentinel ARC · RegenNodes · Planetary Restoration Archive · The Archive persists — attempts at erasure only strengthen the signal.</span></div>
+    </footer>
+  </div>
+
+  <!-- hls.js (CDN) with SRI; used only when needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.8/hls.min.js" integrity="sha512-rwH3WkKmqe7p6A4rtGmVXb8qSjoO3w4t2ZQO9zKqv2QGq+0gkQuWg9uEd9c7H9BgrJ3uG2nQ2n7m4u3bXQe9Tw==" crossorigin="anonymous"></script>
+
+  <script>
+  // === Constellation Canvas (particles + links) ===
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes=[];
+  const N = 160; // star count
+  const maxDist = 160; // link distance
+  function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight}
+  addEventListener('resize', resize, {passive:true}); resize();
+  function rand(a,b){return Math.random()*(b-a)+a}
+  for(let i=0;i<N;i++) nodes.push({x:rand(0,W),y:rand(0,H),vx:rand(-.25,.25),vy:rand(-.25,.25),r:rand(.6,1.8)});
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    // subtle nebula glow
+    const g=ctx.createRadialGradient(W*0.7, H*0.2, 0, W*0.7, H*0.2, Math.hypot(W,H)*0.8);
+    g.addColorStop(0,'rgba(120,180,255,0.06)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+    // update & draw
+    for(const p of nodes){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1;
+    }
+    // links
+    for(let i=0;i<N;i++){
+      const a=nodes[i];
+      for(let j=i+1;j<N;j++){
+        const b=nodes[j];
+        const dx=a.x-b.x, dy=a.y-b.y; const d=Math.hypot(dx,dy);
+        if(d<maxDist){
+          ctx.strokeStyle='rgba(170,200,255,'+ (1-d/maxDist)*0.25 +')';
+          ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    // stars
+    for(const p of nodes){
+      ctx.fillStyle='rgba(220,235,255,.9)'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  // === UI helpers ===
+  const $ = sel => document.querySelector(sel);
+  const video = $('#video');
+  const hlsInput = $('#hlsUrl');
+  const server = $('#rtmpServer');
+  const key = $('#streamKey');
+  const liveDot = $('#liveDot');
+  const liveStatus = $('#liveStatus');
+  const latencyEl = $('#latency');
+  const viewerHash = $('#viewerHash');
+
+  // Load from URL params if present
+  const params = new URLSearchParams(location.search);
+  if(params.get('hls')) hlsInput.value = params.get('hls');
+  if(params.get('key')) key.value = params.get('key');
+  if(params.get('server')) server.value = params.get('server');
+  if(!hlsInput.value && key.value) hlsInput.value = `${location.origin}/hls/${encodeURIComponent(key.value)}/index.m3u8`;
+
+  // HLS player
+  let hls;
+  function loadStream(url){
+    if(!url) return;
+    liveStatus.textContent='Connecting…'; liveDot.classList.remove('dot-ok','dot-bad');
+    if(hls){hls.destroy(); hls=null}
+    if(video.canPlayType('application/vnd.apple.mpegurl')){
+      video.src=url; video.play().catch(()=>{});
+    } else if (window.Hls && window.Hls.isSupported()){
+      hls = new Hls({lowLatencyMode:true, backBufferLength:90});
+      hls.loadSource(url); hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED,()=> video.play().catch(()=>{}));
+      hls.on(Hls.Events.ERROR,(e,data)=>{ if(data.fatal){ liveStatus.textContent='Error'; liveDot.classList.add('dot-bad'); }});
+    } else {
+      alert('HLS not supported in this browser. Try a modern Chromium/Firefox/Safari.');
+    }
+  }
+  $('#apply').addEventListener('click', ()=> loadStream(hlsInput.value.trim()));
+
+  // OBS URL copy
+  $('#copyObs').addEventListener('click', async ()=>{
+    const url = server.value.trim() || 'rtmps://your-domain/live';
+    const sk = key.value.trim() || 'galaxy001';
+    await navigator.clipboard.writeText(`${url}  (Stream Key: ${sk})`);
+    toast('OBS server + key copied');
+  });
+
+  // QR for mobile playback
+  $('#qrBtn').addEventListener('click', ()=>{
+    const url = new URL(location.href);
+    url.searchParams.set('hls', hlsInput.value.trim());
+    const q = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url.toString())}`;
+    const img = new Image(); img.src=q; img.style.width='240px'; img.style.height='240px';
+    const d=document.createElement('div'); d.className='toast'; d.appendChild(img);
+    document.body.appendChild(d); setTimeout(()=>d.remove(), 12000);
+  });
+
+  // Player niceties
+  $('#pipBtn').addEventListener('click', ()=> video.requestPictureInPicture && video.requestPictureInPicture());
+  $('#fsBtn').addEventListener('click', ()=> video.requestFullscreen && video.requestFullscreen());
+  $('#shareBtn').addEventListener('click', async ()=>{
+    const data = { title: 'Galactic RTMPS Portal', text: 'Live now on the Peace Grid 🌍🕊️', url: location.href };
+    if(navigator.share) await navigator.share(data); else { await navigator.clipboard.writeText(location.href); toast('Link copied'); }
+  });
+
+  // Latency estimate (very rough)
+  setInterval(()=>{ if(hls && hls.latency) latencyEl.textContent = hls.latency.toFixed(1)+'s'; }, 1000);
+
+  // Live status probe (naïve)
+  setInterval(()=>{
+    if(!hlsInput.value) return;
+    fetch(hlsInput.value.split('index.m3u8')[0]+'index.m3u8', {cache:'no-store',mode:'no-cors'})
+      .then(()=>{liveStatus.textContent='Live'; liveDot.classList.add('dot-ok');})
+      .catch(()=>{liveStatus.textContent='Idle'; liveDot.classList.remove('dot-ok');});
+  }, 5000);
+
+  // === Self-hash (tamper evident) ===
+  async function sha256(text){
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  async function computeDocHash(){
+    // Serialize HTML in a stable-ish way
+    const html = document.documentElement.outerHTML.replace(/\s+/g,' ');
+    const hash = await sha256(html);
+    document.getElementById('docHash').textContent = hash.slice(0,12)+'…';
+    const vhash = await sha256(navigator.userAgent + '|' + location.href);
+    viewerHash.textContent = vhash.slice(0,10);
+    const remembered = localStorage.getItem('expected_hash');
+    if(remembered && remembered !== hash){ setBad('Integrity mismatch!'); }
+    else if(remembered){ setOk('Integrity OK.'); }
+    else { setWarn('Unpinned. Store expected hash.'); }
+    return hash;
+  }
+  function setOk(msg){ $('#hashDot').classList.remove('dot-bad'); $('#hashDot').classList.add('dot-ok'); $('#hashStatus').textContent=msg; }
+  function setBad(msg){ $('#hashDot').classList.remove('dot-ok'); $('#hashDot').classList.add('dot-bad'); $('#hashStatus').textContent=msg; }
+  function setWarn(msg){ $('#hashDot').classList.remove('dot-ok','dot-bad'); $('#hashStatus').textContent=msg; }
+  let currentHash='';
+  computeDocHash().then(h=> currentHash=h);
+  $('#copyHash').addEventListener('click', async ()=>{ await navigator.clipboard.writeText(currentHash); toast('Hash copied'); });
+  $('#rememberHash').addEventListener('click', ()=>{ if(currentHash){ localStorage.setItem('expected_hash', currentHash); toast('Hash remembered locally'); setOk('Integrity OK (remembered)'); }});
+  $('#compareHash').addEventListener('click', ()=>{
+    const remembered = localStorage.getItem('expected_hash');
+    if(!remembered) return toast('No remembered hash.');
+    if(remembered===currentHash) setOk('Integrity OK.'); else setBad('Integrity mismatch!');
+  });
+
+  // === Theme toggle ===
+  const themeBtn=$('#themeBtn');
+  themeBtn.addEventListener('click', ()=>{
+    const isDark = document.documentElement.dataset.theme!=='light';
+    document.documentElement.dataset.theme = isDark? 'light':'dark';
+    const r = getComputedStyle(document.documentElement);
+  });
+
+  // === PWA (install + offline cache of this file & hls.js) ===
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt = e; $('#installBtn').style.display='inline-flex'; });
+  $('#installBtn').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; }});
+
+  // register SW via Blob so we stay single-file
+  const swCode = `
+    const CACHE='galactic-v1';
+    self.addEventListener('install',e=>{ e.waitUntil((async()=>{ const c=await caches.open(CACHE); await c.addAll(['./','https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.8/hls.min.js']); })()); self.skipWaiting(); });
+    self.addEventListener('activate',e=>{ e.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch',e=>{ e.respondWith((async()=>{
+      const url = new URL(e.request.url);
+      // Never cache live .m3u8 or .ts chunks; network first
+      if(/\.(m3u8|ts)$/i.test(url.pathname)){
+        try{ return await fetch(e.request); }catch{ return new Response('',{status:503}); }
+      }
+      const cached = await caches.match(e.request);
+      return cached || fetch(e.request);
+    })()); });`;
+  const swBlob = new Blob([swCode], {type:'text/javascript'});
+  const swUrl = URL.createObjectURL(swBlob);
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register(swUrl); }
+
+  // === Toaster ===
+  function toast(msg){
+    const d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>d.remove(), 2800);
+  }
+
+  // Little UX flourish: ticker updates from optional /pro/tips.json
+  fetch('/pro/tips.json').then(r=>r.ok?r.json():null).then(j=>{ if(j && Array.isArray(j) && j.length){ let i=0; setInterval(()=>{ $('#ticker').textContent = j[i % j.length]; i++; }, 8000); } });
+
+  </script>
+</body>
+</html>

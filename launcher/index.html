@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRA — Zero-Setup Live Launcher</title>
+<meta name="description" content="Launch a hosted multistream studio (no server, no OBS). Your site stays static; their cloud restreams to all platforms.">
+<style>
+  :root{--bg:#0b1220;--ink:#e7f1ff;--muted:#9fb4c6;--glass:rgba(255,255,255,.05);--accent:#7fe3c5}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui}
+  .wrap{max-width:900px;margin:0 auto;padding:18px}
+  .card{background:var(--glass);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;border:1px solid rgba(255,255,255,.14);background:#11243a;color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .title{font-weight:800;font-size:clamp(20px,2.6vw,28px)}
+  .sub{color:var(--muted)}
+  .mono{font-family:ui-monospace,Consolas,Menlo,monospace}
+  .pill{font:600 12px/1 system-ui;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03)}
+  /* TLK overlay (collapsed) */
+  #tlk-panel{display:none;margin-top:8px}
+  /* XMR chip */
+  .chip{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:10px;background:rgba(10,30,24,.65);
+        border:1px solid rgba(117,227,197,.35);border-radius:999px;padding:8px 12px}
+  .chip small{opacity:.85}
+</style>
+<body>
+  <div class="wrap">
+    <h1 class="title">Zero-Setup Live</h1>
+    <p class="sub">Click a hosted studio. Your browser streams to their cloud; they restream to YouTube/Twitch/Facebook/X and more. No server, no OBS, no keys on your site.</p>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px">Choose a hosted studio</h2>
+      <p class="sub">You’ll connect your destinations inside the studio UI (private). This page never sees your stream keys.</p>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" data-href="https://studio.restream.io/">Open Restream Studio</button>
+        <button class="btn" data-href="https://streamyard.com/">Open StreamYard</button>
+        <button class="btn" data-href="https://melonapp.com/">Open Melon</button>
+      </div>
+      <div style="margin-top:10px" class="sub">
+        Tip: set titles/thumbnails once, then reuse the same destinations each time. For audience on your site, embed the platform’s live player below.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2 style="margin:0 0 6px">Embed a player (optional)</h2>
+      <p class="sub">Paste your live player URL. Example for YouTube: <span class="mono">https://www.youtube.com/embed/LIVE_VIDEO_ID</span></p>
+      <div class="row">
+        <input id="playerUrl" class="mono" placeholder="https://..." style="flex:1 1 380px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#0e1d31;color:var(--ink)">
+        <button class="btn" id="embedBtn">Embed</button>
+      </div>
+      <div id="playerSlot" style="margin-top:10px;aspect-ratio:16/9;background:#000;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:grid;place-items:center">
+        <span class="sub">Player will appear here</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2 style="margin:0 0 6px">Community chat (collapsed)</h2>
+      <div class="row">
+        <button class="btn" id="btn-tlk">Toggle TLK.io</button>
+        <span class="pill">Room: planetary-restoration-archive</span>
+      </div>
+      <div id="tlk-panel" class="card">
+        <iframe src="https://tlk.io/planetary-restoration-archive" style="width:100%;height:420px;border:0;border-radius:12px"></iframe>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2 style="margin:0 0 6px">Security notes</h2>
+      <ul class="sub" style="margin:8px 0 0 18px">
+        <li>This page stores no secrets and never touches your stream keys.</li>
+        <li>Studios use WebRTC from your browser → their cloud, then restream (RTMP/RTMPS) to each platform.</li>
+        <li>Keep your page on HTTPS; add a strict Content-Security-Policy header if you control the domain.</li>
+      </ul>
+    </div>
+
+    <p class="sub" style="margin-top:16px">Attribution: Ricky Foster + Navi — <span class="mono">planetaryrestorationarchive.com</span></p>
+  </div>
+
+  <div class="chip" id="xmr">
+    <div>
+      <div style="font-weight:700">Monero • XMR</div>
+      <small class="mono">47LcEP5RYbVMCMXNURuRjq8qHJNeF2aZ339Bp45MYhmMES5Cc61jMZa59BBdY137EyJMqLfQFBvesV6jLjyCFsBVQYftWde</small>
+    </div>
+    <a href="https://planetaryrestorationarchive.com/crypto/xmr" target="_blank" style="color:var(--accent);text-decoration:none">?</a>
+  </div>
+
+<script>
+  // Open studios in new tabs (iframes are blocked by their X-Frame-Options)
+  document.querySelectorAll('.btn[data-href]').forEach(b=>{
+    b.addEventListener('click',()=>{ window.open(b.dataset.href,'_blank','noopener'); });
+  });
+
+  // TLK toggle
+  document.getElementById('btn-tlk').onclick=()=>{
+    const p=document.getElementById('tlk-panel');
+    p.style.display = p.style.display==='none' ? 'block' : 'none';
+  };
+
+  // Simple player embed
+  document.getElementById('embedBtn').onclick=()=>{
+    const url = document.getElementById('playerUrl').value.trim();
+    const slot = document.getElementById('playerSlot');
+    if(!url){ return; }
+    if(!/^https?:\\/\\//i.test(url)){ alert('Enter a valid https:// URL'); return; }
+    slot.innerHTML = '';
+    const ifr=document.createElement('iframe');
+    ifr.src = url; ifr.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    ifr.style.width='100%'; ifr.style.height='100%'; ifr.style.border='0'; ifr.referrerPolicy='no-referrer';
+    slot.appendChild(ifr);
+  };
+</script>
+</body>
+</html>
